@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>המדבקות שלי</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="מדבקות" />
+<meta name="theme-color" content="#1E2A28" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Assistant:wght@400;600;700&display=swap');
+  :root{
+    --bg:#1E2A28; --bg-soft:#243733; --paper:#F2ECDD; --paper-dark:#E4DBC3;
+    --ink:#23201A; --ink-soft:#5B5646; --amber:#C98A2C; --teal:#3E7C74; --danger:#A6432E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); font-family:'Assistant',sans-serif; color:var(--ink);
+    min-height:100vh; padding-bottom:40px;
+  }
+  .header{padding:28px 20px 18px;}
+  .title-row{display:flex;align-items:center;gap:8px;}
+  .title-icon{font-size:20px;}
+  .title{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:26px;color:var(--paper);}
+  .flex1{flex:1;}
+  .subtitle{color:#9FB0AB;font-size:13px;margin-top:4px;}
+  .warning-inline{display:flex;gap:6px;align-items:center;color:#E2A48A;font-size:12px;margin-top:8px;}
+  .detail-header{display:flex;align-items:center;gap:10px;}
+  .detail-header .title{font-size:22px;}
+  .back-btn{background:var(--bg-soft);border:none;border-radius:999px;width:36px;height:36px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--paper);}
+  .lock-badge{font-size:15px;}
+  .icon-btn{background:transparent;border:none;cursor:pointer;padding:6px;font-size:17px;}
+
+  .list-wrap{padding:0 16px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;}
+  .card{background:var(--paper);border-radius:4px 4px 10px 10px;padding:22px 14px 16px;
+    position:relative;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.25);min-height:100px;}
+  .card-hole{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:10px;height:10px;
+    border-radius:50%;background:var(--bg);}
+  .lock-toggle{position:absolute;top:6px;right:6px;background:transparent;border:1.5px solid var(--ink-soft);
+    border-radius:999px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;font-size:13px;}
+  .lock-toggle.locked{background:var(--amber);border:none;}
+  .card-title{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:16px;color:var(--ink);
+    margin-top:8px;word-break:break-word;}
+  .card-meta{font-size:12px;color:var(--ink-soft);margin-top:8px;}
+  .new-card{border:2px dashed #4C5F5A;border-radius:10px;min-height:100px;display:flex;
+    flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#9FB0AB;gap:6px;}
+  .new-plus{font-size:20px;}
+  .new-label{font-size:13px;font-weight:600;}
+
+  .detail-wrap{padding:0 16px;}
+  .detail-card{background:var(--paper);border-radius:12px;padding:6px;box-shadow:0 8px 20px rgba(0,0,0,0.25);}
+  .row{display:flex;align-items:center;gap:4px;padding:4px 8px;}
+  .row-border{border-bottom:1px solid var(--paper-dark);}
+  .row-input{flex:1;border:none;outline:none;background:transparent;padding:9px 2px;
+    font-size:15.5px;color:var(--ink);font-family:'Assistant',sans-serif;min-width:0;}
+  .row-input[readonly]{color:var(--ink-soft);letter-spacing:2px;}
+  .eye-btn{background:none;border:none;cursor:pointer;padding:4px;font-size:14px;opacity:0.3;}
+  .eye-btn.active{opacity:1;}
+  .trash-btn-sm{background:none;border:none;cursor:pointer;padding:4px;font-size:14px;}
+  .lock-note{display:flex;gap:6px;align-items:center;color:#9FB0AB;font-size:12px;margin-top:10px;}
+
+  .warning-banner{text-align:center;color:#E2A48A;font-size:12px;margin-top:16px;padding:0 16px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(20,26,24,0.62);display:flex;align-items:center;
+    justify-content:center;z-index:50;padding:16px;}
+  .modal{background:var(--paper);border-radius:14px;padding:22px;width:100%;max-width:360px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.4);}
+  .modal-narrow{max-width:320px;}
+  .modal-title{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:19px;margin-bottom:14px;
+    display:flex;align-items:center;gap:8px;}
+  .field-label{font-size:13px;color:var(--ink-soft);margin-bottom:6px;}
+  .text-field{width:100%;box-sizing:border-box;background:#fff;border:1.5px solid var(--paper-dark);
+    border-radius:8px;padding:10px 12px;font-size:15px;font-family:'Assistant',sans-serif;
+    color:var(--ink);outline:none;}
+  .checkbox-row{display:flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer;font-size:14px;}
+  .code-block{margin-top:10px;}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  .error-text{color:var(--danger);font-size:13px;margin-top:8px;}
+  .modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;flex-wrap:wrap;}
+  .btn{border:none;border-radius:9px;padding:10px 16px;font-family:'Assistant',sans-serif;
+    font-weight:700;font-size:14px;cursor:pointer;color:#fff;}
+  .btn:disabled{background:#B9B39E !important;cursor:not-allowed;}
+  .btn-primary{background:var(--teal);}
+  .btn-neutral{background:var(--ink-soft);}
+  .btn-danger{background:var(--danger);}
+  .btn-amber{background:var(--amber);}
+  .preview-box{background:#fff;border:1px solid var(--paper-dark);border-radius:8px;padding:10px 12px;
+    font-size:14px;color:var(--ink-soft);margin:10px 0;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+  "use strict";
+
+  // ---------- helpers ----------
+  function uid(){ return Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+  function emptyRow(){ return {id:uid(), text:"", hidden:false}; }
+
+  function el(tag, attrs, ...children){
+    const e = document.createElement(tag);
+    if(attrs) for(const k in attrs){
+      if(k==="class") e.className = attrs[k];
+      else if(k==="style") e.setAttribute("style", attrs[k]);
+      else if(k==="dir") e.setAttribute("dir", attrs[k]);
+      else if(k==="title") e.setAttribute("title", attrs[k]);
+      else if(k==="type") e.setAttribute("type", attrs[k]);
+      else if(k==="placeholder") e.setAttribute("placeholder", attrs[k]);
+      else if(k==="onClick") e.addEventListener("click", attrs[k]);
+      else if(k==="ondblclick") e.addEventListener("dblclick", attrs[k]);
+    }
+    children.flat().forEach(c=>{
+      if(c===null || c===undefined) return;
+      if(typeof c==="string" || typeof c==="number") e.appendChild(document.createTextNode(c));
+      else e.appendChild(c);
+    });
+    return e;
+  }
+
+  // ---------- storage (plain localStorage — this is a real standalone page) ----------
+  function loadStickers(){
+    try{ const raw = localStorage.getItem("stickers"); return raw ? JSON.parse(raw) : []; }
+    catch(e){ return []; }
+  }
+  let saveErrorShown = false;
+  function saveStickers(){
+    try{ localStorage.setItem("stickers", JSON.stringify(state.stickers)); saveErrorShown=false; }
+    catch(e){ saveErrorShown = true; }
+  }
+
+  // ---------- crypto: AES-GCM, key derived from the sticker's code (never stored) ----------
+  function bufToB64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+  function b64ToBuf(b64){ const bin=atob(b64); const arr=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i); return arr.buffer; }
+  async function deriveKey(code, saltBytes){
+    const material = await crypto.subtle.importKey("raw", new TextEncoder().encode(code), {name:"PBKDF2"}, false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({name:"PBKDF2", salt:saltBytes, iterations:150000, hash:"SHA-256"}, material, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+  }
+  async function encryptWithNewCode(code, rows){
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const key = await deriveKey(code, salt);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const cipherBuf = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, new TextEncoder().encode(JSON.stringify(rows)));
+    return {key, enc:{salt:bufToB64(salt), iv:bufToB64(iv), data:bufToB64(cipherBuf)}};
+  }
+  async function encryptWithKey(key, saltB64, rows){
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const cipherBuf = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, new TextEncoder().encode(JSON.stringify(rows)));
+    return {salt:saltB64, iv:bufToB64(iv), data:bufToB64(cipherBuf)};
+  }
+  async function decryptWithCode(code, enc){
+    const salt = new Uint8Array(b64ToBuf(enc.salt));
+    const key = await deriveKey(code, salt);
+    const iv = new Uint8Array(b64ToBuf(enc.iv));
+    const plainBuf = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, b64ToBuf(enc.data));
+    return {key, rows: JSON.parse(new TextDecoder().decode(plainBuf))};
+  }
+
+  // ---------- state ----------
+  const state = {
+    stickers: loadStickers(),
+    view: "list",
+    activeId: null,
+    unlockedRows: {},   // session-only decrypted rows for locked stickers, never persisted
+    revealed: new Set(),
+    modal: null,
+    cryptoUnsupported: !(window.crypto && window.crypto.subtle),
+  };
+  const keysMap = {}; // session-only CryptoKeys
+
+  function getActive(){ return state.stickers.find(s=>s.id===state.activeId); }
+  function getActiveRows(){
+    const a=getActive(); if(!a) return [];
+    return a.locked ? (state.unlockedRows[a.id]||[]) : a.rows;
+  }
+  function setActiveRowsStructural(updater){
+    const a=getActive(); if(!a) return;
+    if(a.locked) state.unlockedRows[a.id] = updater(state.unlockedRows[a.id]||[]);
+    else a.rows = updater(a.rows);
+  }
+
+  let encryptDebounce=null;
+  function scheduleEncryptSave(){
+    clearTimeout(encryptDebounce);
+    encryptDebounce = setTimeout(syncActiveEncryption, 400);
+  }
+  async function syncActiveEncryption(){
+    const a=getActive();
+    if(!a || !a.locked) return;
+    const rows = state.unlockedRows[a.id];
+    const key = keysMap[a.id];
+    if(!rows || !key) return;
+    const enc = await encryptWithKey(key, a.enc.salt, rows);
+    a.enc = enc;
+    saveStickers();
+  }
+  function flushActive(){
+    const a=getActive();
+    if(a && a.locked) syncActiveEncryption();
+    else saveStickers();
+  }
+  window.addEventListener("beforeunload", ()=>{ saveStickers(); });
+  window.addEventListener("pagehide", ()=>{ saveStickers(); });
+
+  function afterStructuralChange(){
+    render();
+    const a=getActive();
+    if(a && a.locked) syncActiveEncryption();
+    else saveStickers();
+  }
+
+  function focusRow(id, pos){
+    requestAnimationFrame(()=>{
+      const elx = document.querySelector('input[data-row-id="'+id+'"]');
+      if(elx){ elx.focus(); const p=Math.min(pos, elx.value.length); elx.setSelectionRange(p,p); }
+    });
+  }
+  function focusFirstModalField(){
+    requestAnimationFrame(()=>{
+      const f = document.querySelector(".modal input");
+      if(f) f.focus();
+    });
+  }
+  function openModal(m){ state.modal=m; render(); focusFirstModalField(); }
+
+  // ---------- actions ----------
+  function openSticker(s){
+    if(s.locked && !keysMap[s.id]){
+      openModal({type:"unlock", stickerId:s.id, input:"", error:"", loading:false});
+      return;
+    }
+    enterDetail(s, s.locked ? state.unlockedRows[s.id] : undefined);
+  }
+
+  function enterDetail(s, preloadedRows){
+    state.activeId = s.id;
+    state.view = "detail";
+    let focusId=null;
+    if(s.locked){
+      let rows = preloadedRows || [];
+      if(rows.length===0){
+        const r = emptyRow();
+        rows = [r];
+        state.unlockedRows[s.id] = rows;
+      }
+      focusId = rows[0].id;
+    } else if(s.rows.length===0){
+      const r = emptyRow();
+      s.rows = [r];
+      focusId = r.id;
+    } else {
+      focusId = s.rows[0].id;
+    }
+    render();
+    if(focusId) focusRow(focusId, 0);
+  }
+
+  function goBack(){
+    flushActive();
+    state.view="list";
+    state.activeId=null;
+    render();
+  }
+
+  function openLockModal(s){
+    openModal(s.locked
+      ? {type:"lock", stickerId:s.id, stage:"manage", current:"", newCode:"", confirmCode:"", error:"", loading:false}
+      : {type:"lock", stickerId:s.id, stage:"set", current:"", newCode:"", confirmCode:"", error:"", loading:false});
+  }
+
+  async function createSticker(){
+    const m = state.modal;
+    const title = (m.title||"").trim();
+    if(!title){ m.error="נא להזין שם"; render(); return; }
+    if(m.locked){
+      if(!m.code || m.code.length<4){ m.error="הקוד חייב לפחות 4 תווים"; render(); return; }
+      if(m.code !== m.confirmCode){ m.error="הקוד ואימות הקוד לא תואמים"; render(); return; }
+    }
+    m.creating = true; m.error=""; render();
+    const id = uid();
+    if(m.locked){
+      const {key, enc} = await encryptWithNewCode(m.code, []);
+      state.stickers.unshift({id, title, locked:true, enc});
+      keysMap[id] = key;
+      state.unlockedRows[id] = [];
+    } else {
+      state.stickers.unshift({id, title, locked:false, rows:[]});
+    }
+    state.modal = null;
+    saveStickers();
+    render();
+  }
+
+  async function submitUnlock(){
+    const m = state.modal;
+    if(!m.input){ return; }
+    const s = state.stickers.find(x=>x.id===m.stickerId);
+    m.loading=true; m.error=""; render();
+    try{
+      const {key, rows} = await decryptWithCode(m.input, s.enc);
+      const finalRows = rows.length>0 ? rows : [emptyRow()];
+      keysMap[s.id] = key;
+      state.unlockedRows[s.id] = finalRows;
+      state.modal = null;
+      enterDetail(s, finalRows);
+    }catch(e){
+      m.loading=false; m.error="קוד שגוי, נסה שוב"; render();
+      focusFirstModalField();
+    }
+  }
+
+  async function submitLockChange(remove){
+    const m = state.modal;
+    const s = state.stickers.find(x=>x.id===m.stickerId);
+    if(s.locked && !m.current){ m.error="נא להזין את הקוד הנוכחי"; render(); return; }
+    m.loading=true; m.error=""; render();
+    try{
+      let rows;
+      if(s.locked){
+        const result = await decryptWithCode(m.current, s.enc);
+        rows = result.rows;
+      } else {
+        rows = s.rows;
+      }
+      const idx = state.stickers.findIndex(x=>x.id===s.id);
+      if(remove){
+        state.stickers[idx] = {id:s.id, title:s.title, locked:false, rows};
+        delete keysMap[s.id];
+        delete state.unlockedRows[s.id];
+      } else {
+        if(!m.newCode || m.newCode.length<4) throw new Error("short");
+        if(m.newCode !== m.confirmCode) throw new Error("mismatch");
+        const {key, enc} = await encryptWithNewCode(m.newCode, rows);
+        state.stickers[idx] = {id:s.id, title:s.title, locked:true, enc};
+        keysMap[s.id] = key;
+        state.unlockedRows[s.id] = rows;
+      }
+      state.modal = null;
+      saveStickers();
+      render();
+    }catch(e){
+      m.loading=false;
+      m.error = e.message==="short" ? "הקוד חייב לפחות 4 תווים"
+        : e.message==="mismatch" ? "הקוד ואימות הקוד לא תואמים"
+        : (s.locked ? "הקוד הנוכחי שגוי" : "שגיאה, נסה שוב");
+      render();
+    }
+  }
+
+  function handleRowInput(rowId, value){
+    const a=getActive(); if(!a) return;
+    if(a.locked){
+      const rows = state.unlockedRows[a.id]||[];
+      const row = rows.find(r=>r.id===rowId);
+      if(row) row.text = value;
+      scheduleEncryptSave();
+    } else {
+      const row = a.rows.find(r=>r.id===rowId);
+      if(row) row.text = value;
+      saveStickers();
+    }
+  }
+
+  function handleRowKeydown(e, idx){
+    const elx = e.target;
+    const rows = getActiveRows();
+    if(e.key==="Enter"){
+      e.preventDefault();
+      const pos = elx.selectionStart;
+      const before = elx.value.slice(0,pos);
+      const after = elx.value.slice(pos);
+      const newRow = {id:uid(), text:after, hidden:false};
+      setActiveRowsStructural(rs=>{
+        const copy=[...rs];
+        copy[idx] = Object.assign({}, copy[idx], {text:before});
+        copy.splice(idx+1,0,newRow);
+        return copy;
+      });
+      afterStructuralChange();
+      focusRow(newRow.id, 0);
+      return;
+    }
+    if(e.key==="Backspace" && elx.selectionStart===0 && elx.selectionEnd===0 && idx>0){
+      e.preventDefault();
+      const prevRow = rows[idx-1];
+      const currRow = rows[idx];
+      const mergedPos = prevRow.text.length;
+      setActiveRowsStructural(rs=>{
+        const copy=[...rs];
+        copy[idx-1] = Object.assign({}, prevRow, {text: prevRow.text+currRow.text});
+        copy.splice(idx,1);
+        return copy;
+      });
+      afterStructuralChange();
+      focusRow(prevRow.id, mergedPos);
+      return;
+    }
+    if(e.key==="ArrowUp" && idx>0){
+      e.preventDefault();
+      focusRow(rows[idx-1].id, Math.min(elx.selectionStart, rows[idx-1].text.length));
+      return;
+    }
+    if(e.key==="ArrowDown" && idx<rows.length-1){
+      e.preventDefault();
+      focusRow(rows[idx+1].id, Math.min(elx.selectionStart, rows[idx+1].text.length));
+    }
+  }
+
+  function toggleReveal(rowId){
+    if(state.revealed.has(rowId)) state.revealed.delete(rowId);
+    else state.revealed.add(rowId);
+    render();
+  }
+  function toggleRowHidden(rowId){
+    setActiveRowsStructural(rows=>rows.map(r=> r.id===rowId ? Object.assign({}, r, {hidden:!r.hidden}) : r));
+    state.revealed.delete(rowId);
+    afterStructuralChange();
+  }
+
+  function confirmDeleteRow(){
+    const {rowId} = state.modal;
+    setActiveRowsStructural(rows=>{
+      const remaining = rows.filter(r=>r.id!==rowId);
+      return remaining.length===0 ? [emptyRow()] : remaining;
+    });
+    state.modal=null;
+    afterStructuralChange();
+  }
+
+  function confirmDeleteSticker(){
+    const s = state.modal.sticker;
+    state.stickers = state.stickers.filter(x=>x.id!==s.id);
+    delete keysMap[s.id];
+    delete state.unlockedRows[s.id];
+    state.modal=null;
+    state.view="list";
+    state.activeId=null;
+    saveStickers();
+    render();
+  }
+
+  // ---------- render ----------
+  const app = document.getElementById("app");
+
+  function render(){
+    app.innerHTML = "";
+    app.appendChild(buildHeader());
+    app.appendChild(state.view==="list" ? buildList() : buildDetail());
+    if(saveErrorShown){
+      app.appendChild(el("div",{class:"warning-banner"}, "לא הצלחנו לשמור כרגע — הנתונים עדיין מוצגים אך ייתכן שלא נשמרו."));
+    }
+    if(state.modal) app.appendChild(buildModal());
+  }
+
+  function buildHeader(){
+    if(state.view==="list"){
+      const h = el("div",{class:"header"},
+        el("div",{class:"title-row"}, el("span",{class:"title-icon"},"🏷️"), el("span",{class:"title"},"המדבקות שלי")),
+        el("div",{class:"subtitle"}, state.stickers.length===0 ? "עדיין אין מדבקות — צור אחת חדשה למטה" : (state.stickers.length + " מדבקות שמורות"))
+      );
+      if(state.cryptoUnsupported){
+        h.appendChild(el("div",{class:"warning-inline"}, "⚠️ הדפדפן הזה לא תומך בהצפנה — מדבקות נעולות לא יעבדו כראוי כאן."));
+      }
+      return h;
+    }
+    const active = getActive();
+    if(!active) return el("div",{class:"header"});
+    const h = el("div",{class:"header detail-header"},
+      el("button",{class:"back-btn", onClick:goBack},"➡️"),
+      el("span",{class:"title flex1"}, active.title)
+    );
+    if(active.locked) h.appendChild(el("span",{class:"lock-badge"},"🔒"));
+    h.appendChild(el("button",{class:"icon-btn", title:"מחק מדבקה", onClick:()=>{ openModal({type:"deleteSticker", sticker:active}); }},"🗑️"));
+    return h;
+  }
+
+  function buildList(){
+    const grid = el("div",{class:"grid"});
+    state.stickers.forEach((s,i)=>{
+      const rot = ((i%5)-2)*0.6;
+      const rowCount = s.locked
+        ? (state.unlockedRows[s.id] ? state.unlockedRows[s.id].filter(r=>r.text.trim()).length : null)
+        : s.rows.filter(r=>r.text.trim()).length;
+      const card = el("div",{class:"card", style:"transform:rotate("+rot+"deg)", onClick:()=>openSticker(s)},
+        el("div",{class:"card-hole"}),
+        el("button",{class:"lock-toggle"+(s.locked?" locked":""), title: s.locked?"ניהול קוד נעילה":"הוסף קוד נעילה",
+          onClick:(e)=>{ e.stopPropagation(); openLockModal(s); }}, s.locked?"🔒":"🔓"),
+        el("div",{class:"card-title"}, s.title),
+        el("div",{class:"card-meta"}, rowCount===null ? "נעולה" : (rowCount+" שורות"))
+      );
+      grid.appendChild(card);
+    });
+    grid.appendChild(el("div",{class:"new-card", onClick:()=>openModal({type:"new", title:"", locked:false, code:"", confirmCode:"", error:"", creating:false})},
+      el("div",{class:"new-plus"},"➕"),
+      el("div",{class:"new-label"},"מדבקה חדשה")
+    ));
+    return el("div",{class:"list-wrap"}, grid);
+  }
+
+  function buildDetail(){
+    const a = getActive();
+    if(!a) return el("div");
+    const rows = getActiveRows();
+    const card = el("div",{class:"detail-card"});
+    rows.forEach((r,idx)=>{
+      const masked = r.hidden && !state.revealed.has(r.id);
+      const input = document.createElement("input");
+      input.className = "row-input";
+      input.type = "text";
+      input.dir = "rtl";
+      input.setAttribute("data-row-id", r.id);
+      input.value = masked ? "•".repeat(Math.max(r.text.length,4)) : r.text;
+      if(masked) input.readOnly = true;
+      if(idx===0 && rows.length===1) input.placeholder = "התחל לכתוב כאן...";
+      input.addEventListener("input", (e)=> handleRowInput(r.id, e.target.value));
+      input.addEventListener("keydown", (e)=> handleRowKeydown(e, idx));
+
+      const eyeBtn = el("button",{class:"eye-btn"+(r.hidden?" active":""),
+        title: r.hidden ? (masked ? "הצג שורה" : "הסתר שוב") : "סמן כשורה רגישה",
+        onClick:()=>toggleReveal(r.id),
+        ondblclick:(e)=>{ e.stopPropagation(); toggleRowHidden(r.id); }},
+        r.hidden ? (masked?"👁️":"🙈") : "🙈");
+
+      const trashBtn = el("button",{class:"trash-btn-sm", title:"מחק שורה",
+        onClick:()=>openModal({type:"deleteRow", rowId:r.id, text:r.text})}, "🗑️");
+
+      const rowDiv = el("div",{class:"row"+(idx<rows.length-1?" row-border":"")}, input, eyeBtn, trashBtn);
+      card.appendChild(rowDiv);
+    });
+    const wrap = el("div",{class:"detail-wrap"}, card);
+    if(a.locked){
+      wrap.appendChild(el("div",{class:"lock-note"}, "🔒 המדבקה הזו מוצפנת. בלי הקוד, אף אחד — כולל בגישה ישירה לנתונים — לא יכול לקרוא את התוכן."));
+    }
+    return wrap;
+  }
+
+  function buildModal(){
+    const m = state.modal;
+    const overlay = el("div",{class:"overlay", onClick:()=>{ if(!m.loading && !m.creating){ state.modal=null; render(); } }});
+    let box;
+    if(m.type==="new") box = buildNewModal(m);
+    else if(m.type==="unlock") box = buildUnlockModal(m);
+    else if(m.type==="lock") box = buildLockModal(m);
+    else if(m.type==="deleteRow") box = buildDeleteRowModal(m);
+    else box = buildDeleteStickerModal(m);
+    box.addEventListener("click", e=>e.stopPropagation());
+    overlay.appendChild(box);
+    return overlay;
+  }
+
+  function buildNewModal(m){
+    const titleInput = document.createElement("input");
+    titleInput.className = "text-field"; titleInput.dir="rtl"; titleInput.type="text";
+    titleInput.placeholder = "לדוגמה: קניות, קודים, רעיונות"; titleInput.value = m.title;
+    titleInput.addEventListener("input", e=>{ m.title = e.target.value; });
+    titleInput.addEventListener("keydown", e=>{ if(e.key==="Enter" && !m.locked) createSticker(); });
+
+    const checkbox = document.createElement("input");
+    checkbox.type="checkbox"; checkbox.checked = m.locked;
+    checkbox.addEventListener("change", e=>{ m.locked = e.target.checked; render(); focusFirstModalField(); });
+
+    const box = el("div",{class:"modal"},
+      el("div",{class:"modal-title"}, "מדבקה חדשה"),
+      el("div",{class:"field-label"}, "שם / נושא"),
+      titleInput,
+      el("label",{class:"checkbox-row"}, checkbox, el("span",null,"מדבקה עם קוד (מוצפנת)"))
+    );
+    if(m.locked){
+      const codeInput = document.createElement("input");
+      codeInput.className="text-field"; codeInput.type="password"; codeInput.placeholder="בחר קוד (לפחות 4 תווים)";
+      codeInput.value = m.code;
+      codeInput.addEventListener("input", e=>{ m.code = e.target.value; });
+      codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); const c=document.getElementById("confirmCodeField"); if(c) c.focus(); } });
+
+      const confirmInput = document.createElement("input");
+      confirmInput.className="text-field"; confirmInput.type="password"; confirmInput.placeholder="הקלד את הקוד שוב לאימות";
+      confirmInput.id = "confirmCodeField";
+      confirmInput.value = m.confirmCode;
+      confirmInput.addEventListener("input", e=>{ m.confirmCode = e.target.value; });
+      confirmInput.addEventListener("keydown", e=>{ if(e.key==="Enter") createSticker(); });
+
+      box.appendChild(el("div",{class:"code-block"}, codeInput,
+        el("div",{class:"field-label", style:"margin-top:10px;"}, "אימות קוד"),
+        confirmInput,
+        el("div",{class:"hint"}, "שים לב: אין דרך לשחזר קוד שנשכח — התוכן ייעלם יחד איתו.")));
+    }
+    if(m.error) box.appendChild(el("div",{class:"error-text"}, m.error));
+    box.appendChild(el("div",{class:"modal-actions"},
+      el("button",{class:"btn btn-neutral", onClick:()=>{ if(!m.creating){ state.modal=null; render(); } }}, "ביטול"),
+      el("button",{class:"btn btn-primary", onClick:createSticker}, m.creating ? "יוצר..." : "צור מדבקה")
+    ));
+    return box;
+  }
+
+  function buildUnlockModal(m){
+    const input = document.createElement("input");
+    input.className="text-field"; input.type="password"; input.placeholder="הזן קוד"; input.value=m.input;
+    input.addEventListener("input", e=>{ m.input=e.target.value; });
+    input.addEventListener("keydown", e=>{ if(e.key==="Enter") submitUnlock(); });
+
+    const box = el("div",{class:"modal modal-narrow"},
+      el("div",{class:"modal-title"}, "🔒 מדבקה נעולה"),
+      input
+    );
+    if(m.error) box.appendChild(el("div",{class:"error-text"}, m.error));
+    box.appendChild(el("div",{class:"modal-actions"},
+      el("button",{class:"btn btn-neutral", onClick:()=>{ if(!m.loading){ state.modal=null; render(); } }}, "ביטול"),
+      el("button",{class:"btn btn-amber", onClick:submitUnlock}, m.loading ? "בודק..." : "פתח")
+    ));
+    return box;
+  }
+
+  function buildLockModal(m){
+    const box = el("div",{class:"modal"},
+      el("div",{class:"modal-title"}, m.stage==="set" ? "הוספת קוד למדבקה" : "ניהול קוד נעילה")
+    );
+    if(m.stage==="manage"){
+      const curInput = document.createElement("input");
+      curInput.className="text-field"; curInput.type="password"; curInput.placeholder="הזן את הקוד הקיים"; curInput.value=m.current;
+      curInput.addEventListener("input", e=>{ m.current=e.target.value; });
+      box.appendChild(el("div",{class:"field-label"}, "קוד נוכחי"));
+      box.appendChild(curInput);
+    }
+    const newInput = document.createElement("input");
+    newInput.className="text-field"; newInput.type="password"; newInput.placeholder="לפחות 4 תווים"; newInput.value=m.newCode;
+    newInput.addEventListener("input", e=>{ m.newCode=e.target.value; });
+    newInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); const c=document.getElementById("confirmLockCodeField"); if(c) c.focus(); } });
+    box.appendChild(el("div",{class:"field-label", style:"margin-top:14px;"},
+      m.stage==="manage" ? "קוד חדש (להסרה, השאר ריק ולחץ הסר קוד)" : "קוד חדש"));
+    box.appendChild(newInput);
+
+    const confirmInput = document.createElement("input");
+    confirmInput.className="text-field"; confirmInput.type="password"; confirmInput.placeholder="הקלד את הקוד החדש שוב לאימות";
+    confirmInput.id = "confirmLockCodeField";
+    confirmInput.value = m.confirmCode;
+    confirmInput.addEventListener("input", e=>{ m.confirmCode = e.target.value; });
+    confirmInput.addEventListener("keydown", e=>{ if(e.key==="Enter") submitLockChange(false); });
+    box.appendChild(el("div",{class:"field-label", style:"margin-top:10px;"}, "אימות קוד חדש"));
+    box.appendChild(confirmInput);
+
+    if(m.error) box.appendChild(el("div",{class:"error-text"}, m.error));
+    const actions = el("div",{class:"modal-actions"},
+      el("button",{class:"btn btn-neutral", onClick:()=>{ if(!m.loading){ state.modal=null; render(); } }}, "ביטול")
+    );
+    if(m.stage==="manage"){
+      actions.appendChild(el("button",{class:"btn btn-danger", onClick:()=>submitLockChange(true)}, m.loading ? "..." : "הסר קוד"));
+    }
+    actions.appendChild(el("button",{class:"btn btn-primary", onClick:()=>submitLockChange(false)}, m.loading ? "..." : (m.stage==="set" ? "שמור קוד" : "עדכן קוד")));
+    box.appendChild(actions);
+    return box;
+  }
+
+  function buildDeleteRowModal(m){
+    return el("div",{class:"modal modal-narrow"},
+      el("div",{class:"modal-title"}, "⚠️ למחוק שורה זו?"),
+      el("div",{class:"preview-box"}, m.text || "(שורה ריקה)"),
+      el("div",{class:"hint"}, "לא ניתן לשחזר לאחר המחיקה."),
+      el("div",{class:"modal-actions"},
+        el("button",{class:"btn btn-neutral", onClick:()=>{ state.modal=null; render(); }}, "ביטול"),
+        el("button",{class:"btn btn-danger", onClick:confirmDeleteRow}, "🗑️ מחק לצמיתות")
+      )
+    );
+  }
+
+  function buildDeleteStickerModal(m){
+    return el("div",{class:"modal modal-narrow"},
+      el("div",{class:"modal-title"}, "⚠️ למחוק את המדבקה \"" + m.sticker.title + "\"?"),
+      el("div",{class:"hint"}, "כל השורות בתוכה יימחקו לצמיתות."),
+      el("div",{class:"modal-actions"},
+        el("button",{class:"btn btn-neutral", onClick:()=>{ state.modal=null; render(); }}, "ביטול"),
+        el("button",{class:"btn btn-danger", onClick:confirmDeleteSticker}, "🗑️ מחק מדבקה")
+      )
+    );
+  }
+
+  // service worker registration for basic offline installability (optional, ignored if missing)
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", ()=>{
+      navigator.serviceWorker.register("sw.js").catch(()=>{});
+    });
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
