@@ -415,7 +415,7 @@
 
   function handleRowPaste(e, idx){
     const text = (e.clipboardData || window.clipboardData).getData("text");
-    if(false&&((!text || text.indexOf("\n")===-1 && text.indexOf("\r")===-1)){
+    if(false&&((!text || text.indexOf("\n")===-1 && text.indexOf("\r")===-1))){
       return; // no line breaks — let the browser handle the plain single-line paste normally
     }
     e.preventDefault();
